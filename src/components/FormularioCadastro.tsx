@@ -9,6 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Users, UserCheck, Send, Shield } from "lucide-react";
+import { 
+  sanitizeString, 
+  sanitizeNumber, 
+  validateEmail, 
+  validatePhone, 
+  validateDocument,
+  generateSessionToken,
+  SECURITY_CONFIG 
+} from "@/lib/security";
+import { getApiUrl } from "@/config/environment";
 
 // Tipos de documento
 const tiposDocumento = [
@@ -112,40 +122,101 @@ export const FormularioCadastro = ({
     }
   }, [quantidadeDependentes, append, remove]);
 
+  // Função para sanitizar dados
+  const sanitizeData = (data: any) => {
+    return {
+      titular: {
+        tipoDocumento: Math.max(0, Math.min(3, Number(data.titular.tipoDocumento) || 0)),
+        numeroDocumento: sanitizeNumber(data.titular.numeroDocumento || ''),
+        genero: ['male', 'female'].includes(data.titular.genero) ? data.titular.genero : 'male',
+      },
+      dependentes: data.dependentes.map((dep: any) => ({
+        nome: sanitizeString(dep.nome || ''),
+        telefone: sanitizeNumber(dep.telefone || ''),
+        codigoPais: ['+55', '+1'].includes(getCodigoPais(dep.codigoPais)) ? getCodigoPais(dep.codigoPais) : '+55',
+        email: sanitizeString(dep.email || '').toLowerCase(),
+        genero: ['male', 'female'].includes(dep.genero) ? dep.genero : 'male',
+        tipoDocumento: Math.max(0, Math.min(3, Number(dep.tipoDocumento) || 0)),
+        numeroDocumento: sanitizeNumber(dep.numeroDocumento || ''),
+      })),
+      plano: sanitizeString(data.plano || ''),
+      quantidadeDependentes: Math.max(0, Math.min(SECURITY_CONFIG.MAX_DEPENDENTES, Number(quantidadeDependentes) || 0)),
+      customerStripe: sanitizeString(customerStripe || ''),
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent.slice(0, 200),
+      referrer: document.referrer.slice(0, 200),
+      sessionToken: generateSessionToken()
+    };
+  };
+
+  // Função para validar dados críticos
+  const validateCriticalData = (data: any) => {
+    const errors: string[] = [];
+
+    // Validar quantidade de dependentes
+    if (data.quantidadeDependentes > SECURITY_CONFIG.MAX_DEPENDENTES) {
+      errors.push('Quantidade de dependentes inválida');
+    }
+
+    // Validar emails
+    data.dependentes.forEach((dep: any, index: number) => {
+      if (!validateEmail(dep.email)) {
+        errors.push(`Email inválido no dependente ${index + 1}`);
+      }
+    });
+
+    // Validar telefones
+    data.dependentes.forEach((dep: any, index: number) => {
+      if (!validatePhone(dep.telefone)) {
+        errors.push(`Telefone inválido no dependente ${index + 1}`);
+      }
+    });
+
+    // Validar documentos
+    data.dependentes.forEach((dep: any, index: number) => {
+      if (!validateDocument(dep.numeroDocumento, dep.tipoDocumento)) {
+        errors.push(`Documento inválido no dependente ${index + 1}`);
+      }
+    });
+
+    // Validar documento do titular
+    if (!validateDocument(data.titular.numeroDocumento, data.titular.tipoDocumento)) {
+      errors.push('Documento do titular inválido');
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (data: FormularioData) => {
     setIsSubmitting(true);
     try {
-      console.log("Dados do formulário:", data);
-      console.log("Customer Stripe:", customerStripe);
+      // Sanitizar dados
+      const dadosSanitizados = sanitizeData(data);
       
-      // Preparar dados para envio
-      const dadosParaEnvio = {
-        titular: {
-          tipoDocumento: data.titular.tipoDocumento,
-          numeroDocumento: data.titular.numeroDocumento,
-          genero: data.titular.genero,
-        },
-        dependentes: data.dependentes.map(dep => ({
-          nome: dep.nome,
-          telefone: dep.telefone,
-          codigoPais: getCodigoPais(dep.codigoPais),
-          email: dep.email,
-          genero: dep.genero,
-          tipoDocumento: dep.tipoDocumento,
-          numeroDocumento: dep.numeroDocumento,
-        })),
-        plano: data.plano,
-        quantidadeDependentes: quantidadeDependentes,
-        customerStripe: customerStripe
-      };
+      // Validar dados críticos
+      const validationErrors = validateCriticalData(dadosSanitizados);
+      if (validationErrors.length > 0) {
+        throw new Error(`Dados inválidos: ${validationErrors.join(', ')}`);
+      }
 
-      // Enviar para a API
-      const response = await fetch('https://primary-teste-2d67.up.railway.app/webhook-test/finalizar-cadastros', {
+      // Rate limiting básico (localStorage)
+      const lastSubmission = localStorage.getItem('lastFormSubmission');
+      const now = Date.now();
+      if (lastSubmission && (now - parseInt(lastSubmission)) < SECURITY_CONFIG.RATE_LIMIT_WINDOW) {
+        throw new Error(`Aguarde ${SECURITY_CONFIG.RATE_LIMIT_WINDOW / 1000} segundos antes de enviar novamente`);
+      }
+      localStorage.setItem('lastFormSubmission', now.toString());
+
+      // Enviar para a API com headers de segurança
+      const response = await fetch(getApiUrl(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-Form-Source': 'dependente-plan-form',
+          'X-Timestamp': dadosSanitizados.timestamp,
         },
-        body: JSON.stringify(dadosParaEnvio)
+        body: JSON.stringify(dadosSanitizados)
       });
 
       if (!response.ok) {
@@ -153,7 +224,6 @@ export const FormularioCadastro = ({
       }
 
       const resultado = await response.json();
-      console.log('Resposta da API:', resultado);
       
       toast({
         title: "Cadastro realizado com sucesso!",
@@ -165,7 +235,7 @@ export const FormularioCadastro = ({
       console.error('Erro ao enviar dados:', error);
       toast({
         title: "Erro no cadastro",
-        description: "Tente novamente em alguns instantes.",
+        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
     } finally {

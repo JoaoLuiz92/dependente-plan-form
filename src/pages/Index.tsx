@@ -3,7 +3,6 @@ import { FormularioCadastro } from "@/components/FormularioCadastro";
 
 // Mapeamento de planos por ID (baseado na sua estrutura)
 const planos = {
-  "7a356177-0a97-490d-b3f0-d7f4928a10f5": { nome: "assinatura_teste", dependentes: 0 },
   "fdff75fe-23c3-47d0-a84c-445532a878ef": { nome: "Plano 1 pessoa - Premium (6 meses)", dependentes: 0 },
   "9b4ace5f-1874-40ad-b5e9-93446a4447b9": { nome: "Plano 1 pessoa - VIP (12 meses)", dependentes: 0 },
   "fde207d4-fef1-4585-a285-c84507b85449": { nome: "Plano 1 pessoa: $29,90", dependentes: 1 },
