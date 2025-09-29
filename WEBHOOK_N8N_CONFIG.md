@@ -36,7 +36,7 @@ O formulário enviará os seguintes dados para o webhook:
 
 ### 1. **Configuração Básica do Webhook**
 - **HTTP Method**: `POST`
-- **Path**: `/webhook/2c9ff6b7-9a39-4fdd-9113-00ea306442fc`
+- **Path**: `/webhook/finalizar-cadastros`
 - **Response Mode**: `Respond to Webhook`
 
 ### 2. **Headers de Resposta**
@@ -56,12 +56,8 @@ Configure os seguintes headers para resolver o CORS:
 ```json
 {
   "success": true,
-  "message": "Cadastro realizado com sucesso! Você será redirecionado em instantes.",
-  "redirect": "https://sua-pagina-de-sucesso.com",
   "data": {
-    "id": "cadastro_123456",
-    "status": "processando",
-    "proximo_passo": "Aguardando pagamento"
+    "url": "https://telemedicine.easydoctors.us/"
   }
 }
 ```
@@ -208,7 +204,7 @@ const sessionToken = $input.first().json.sessionToken;
 
 ### **1. Teste com cURL:**
 ```bash
-curl -X POST https://primary-production-2441.up.railway.app/webhook/2c9ff6b7-9a39-4fdd-9113-00ea306442fc \
+curl -X POST https://primary-production-2441.up.railway.app/webhook/finalizar-cadastros \
   -H "Content-Type: application/json" \
   -H "X-Requested-With: XMLHttpRequest" \
   -H "X-Form-Source: dependente-plan-form" \
@@ -233,11 +229,8 @@ curl -X POST https://primary-production-2441.up.railway.app/webhook/2c9ff6b7-9a3
 ```json
 {
   "success": true,
-  "message": "Cadastro realizado com sucesso!",
-  "redirect": "https://sua-pagina-de-sucesso.com",
   "data": {
-    "id": "cadastro_123456",
-    "status": "processando"
+    "url": "https://telemedicine.easydoctors.us/"
   }
 }
 ```

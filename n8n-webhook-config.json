@@ -3,7 +3,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "2c9ff6b7-9a39-4fdd-9113-00ea306442fc",
+        "path": "finalizar-cadastros",
         "responseMode": "responseNode",
         "options": {
           "cors": {
@@ -17,11 +17,11 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [240, 300],
-      "webhookId": "2c9ff6b7-9a39-4fdd-9113-00ea306442fc"
+      "webhookId": "finalizar-cadastros"
     },
     {
       "parameters": {
-        "functionCode": "// Processar dados do formulário\nconst dados = $input.first().json;\n\n// Validar dados obrigatórios\nif (!dados.titular || !dados.dependentes) {\n  return {\n    success: false,\n    message: 'Dados incompletos',\n    error: 'MISSING_DATA'\n  };\n}\n\n// Validar origem\nconst allowedOrigins = [\n  'https://dependente-plan-form.vercel.app',\n  'https://dependente-plan-form-git-main.vercel.app'\n];\n\nconst origin = $input.first().headers['origin'];\nif (origin && !allowedOrigins.includes(origin)) {\n  return {\n    success: false,\n    message: 'Origem não autorizada',\n    error: 'UNAUTHORIZED_ORIGIN'\n  };\n}\n\n// Validar headers obrigatórios\nconst requiredHeaders = ['x-requested-with', 'x-form-source'];\nconst headers = $input.first().headers;\n\nfor (const header of requiredHeaders) {\n  if (!headers[header]) {\n    return {\n      success: false,\n      message: 'Headers obrigatórios ausentes',\n      error: 'MISSING_HEADERS'\n    };\n  }\n}\n\n// Simular processamento do cadastro\nconst cadastroId = 'cad_' + Date.now();\nconst timestamp = new Date().toISOString();\n\n// Log dos dados recebidos\nconsole.log('Dados recebidos:', {\n  timestamp,\n  cadastroId,\n  titular: dados.titular,\n  dependentes: dados.dependentes.length,\n  plano: dados.plano,\n  customerStripe: dados.customerStripe\n});\n\n// Retornar resposta de sucesso com redirecionamento\nreturn {\n  success: true,\n  message: 'Cadastro realizado com sucesso! Você será redirecionado em instantes.',\n  redirect: 'https://sua-empresa.com/sucesso?id=' + cadastroId,\n  data: {\n    id: cadastroId,\n    status: 'processando',\n    proximo_passo: 'Aguardando confirmação',\n    timestamp: timestamp,\n    plano: dados.plano,\n    dependentes: dados.dependentes.length\n  }\n};"
+        "functionCode": "// Processar dados do formulário\nconst dados = $input.first().json;\n\n// Validar dados obrigatórios\nif (!dados.titular || !dados.dependentes) {\n  return {\n    success: false,\n    message: 'Dados incompletos',\n    error: 'MISSING_DATA'\n  };\n}\n\n// Validar origem\nconst allowedOrigins = [\n  'https://dependente-plan-form.vercel.app',\n  'https://dependente-plan-form-git-main.vercel.app'\n];\n\nconst origin = $input.first().headers['origin'];\nif (origin && !allowedOrigins.includes(origin)) {\n  return {\n    success: false,\n    message: 'Origem não autorizada',\n    error: 'UNAUTHORIZED_ORIGIN'\n  };\n}\n\n// Validar headers obrigatórios\nconst requiredHeaders = ['x-requested-with', 'x-form-source'];\nconst headers = $input.first().headers;\n\nfor (const header of requiredHeaders) {\n  if (!headers[header]) {\n    return {\n      success: false,\n      message: 'Headers obrigatórios ausentes',\n      error: 'MISSING_HEADERS'\n    };\n  }\n}\n\n// Simular processamento do cadastro\nconst cadastroId = 'cad_' + Date.now();\nconst timestamp = new Date().toISOString();\n\n// Log dos dados recebidos\nconsole.log('Dados recebidos:', {\n  timestamp,\n  cadastroId,\n  titular: dados.titular,\n  dependentes: dados.dependentes.length,\n  plano: dados.plano,\n  customerStripe: dados.customerStripe\n});\n\n// Retornar resposta de sucesso com redirecionamento\nreturn {\n  success: true,\n  data: {\n    url: 'https://telemedicine.easydoctors.us/'\n  }\n};"
       },
       "id": "process-node",
       "name": "Processar Cadastro",

@@ -226,20 +226,20 @@ export const FormularioCadastro = ({
       const resultado = await response.json();
       
       // Verificar se o webhook retornou dados de redirecionamento
-      if (resultado.success && resultado.redirect) {
+      if (resultado.success && resultado.data && resultado.data.url) {
         toast({
           title: "Cadastro realizado com sucesso!",
-          description: resultado.message || "Redirecionando...",
+          description: "Redirecionando para a plataforma...",
         });
         
         // Redirecionar após 2 segundos
         setTimeout(() => {
-          window.location.href = resultado.redirect;
+          window.location.href = resultado.data.url;
         }, 2000);
       } else if (resultado.success) {
         toast({
           title: "Cadastro realizado com sucesso!",
-          description: resultado.message || "Os dados foram enviados para processamento.",
+          description: "Os dados foram enviados para processamento.",
         });
       } else {
         throw new Error(resultado.message || "Erro no processamento");
