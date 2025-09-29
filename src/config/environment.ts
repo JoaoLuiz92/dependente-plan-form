@@ -1,7 +1,7 @@
 // Configurações de ambiente
 export const ENV_CONFIG = {
   // URLs da API
-  API_URL: import.meta.env.VITE_API_URL || 'https://primary-teste-2d67.up.railway.app/webhook-test/finalizar-cadastros',
+  API_URL: import.meta.env.VITE_API_URL || 'https://primary-production-2441.up.railway.app/webhook/finalizar-cadastros',
   
   // Informações da aplicação
   APP_NAME: import.meta.env.VITE_APP_NAME || 'Dependente Plan Form',
