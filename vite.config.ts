@@ -26,6 +26,10 @@ export default defineConfig(({ mode }) => ({
           ui: ['@radix-ui/react-select', '@radix-ui/react-dialog'],
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
         },
+        // Forçar cache busting
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
     terserOptions: {
